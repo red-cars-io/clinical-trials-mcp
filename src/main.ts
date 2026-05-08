@@ -11,37 +11,37 @@ interface McpRequest {
   arguments: Record<string, unknown>;
 }
 
+// handleRequest must be exported for MCP standby mode — defined OUTSIDE main() for ESM compatibility
+const handleRequest = async (req: McpRequest) => {
+  const { toolName, arguments: args } = req;
+  const tool = TOOLS.find((t) => t.name === toolName);
+
+  if (!tool) {
+    return {
+      content: [{ type: 'text', text: JSON.stringify({ error: `Unknown tool: ${toolName}` }) }],
+      isError: true,
+    };
+  }
+
+  try {
+    await Actor.charge({ eventName: tool.name, count: 1 });
+    const result = await handleTool(toolName, args as Record<string, unknown>, api);
+    return {
+      content: [{ type: 'text', text: JSON.stringify(result) }],
+    };
+  } catch (err) {
+    return {
+      content: [{ type: 'text', text: JSON.stringify({ error: String(err) }) }],
+      isError: true,
+    };
+  }
+};
+
 async function main() {
   await Actor.init();
 
-  // handleRequest must be exported for MCP standby mode
-  const handleRequest = async (req: McpRequest) => {
-    const { toolName, arguments: args } = req;
-    const tool = TOOLS.find((t) => t.name === toolName);
-
-    if (!tool) {
-      return {
-        content: [{ type: 'text', text: JSON.stringify({ error: `Unknown tool: ${toolName}` }) }],
-        isError: true,
-      };
-    }
-
-    try {
-      await Actor.charge({ eventName: tool.name, count: 1 });
-      const result = await handleTool(toolName, args as Record<string, unknown>, api);
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result) }],
-      };
-    } catch (err) {
-      return {
-        content: [{ type: 'text', text: JSON.stringify({ error: String(err) }) }],
-        isError: true,
-      };
-    }
-  };
-
-  // Export for MCP gateway
-  module.exports = { handleRequest };
+  // Export for MCP gateway (ESM compatible)
+  exports.handleRequest = handleRequest;
 
   // HTTP server for readiness probe
   const server = http.createServer((req, res) => {

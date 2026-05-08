@@ -271,6 +271,8 @@ async function handleGetTrialEnrollmentTrends(
     projected_completion: projectedCompletion,
     verdict,
     source: 'ClinicalTrials.gov API',
+    data_quality: 'simulated',
+    data_quality_note: 'Actual quarterly enrollment history is not available from ClinicalTrials.gov API v2. Trends are modeled. Verify with clinical operations before relying on projections.',
   };
 }
 

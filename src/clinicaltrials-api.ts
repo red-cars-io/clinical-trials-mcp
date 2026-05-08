@@ -86,6 +86,23 @@ export class ClinicalTrialsAPI {
     const query = new URLSearchParams();
     if (params.indication) query.set('query.cond', params.indication);
     if (params.maxResults) query.set('pageSize', String(params.maxResults));
+    if (params.phase) query.set('filter.phase', params.phase);
+    // Forward geoLocation via query.locn
+    if (params.geoLocation) query.set('query.locn', params.geoLocation);
+
+    // Build advanced filters array
+    const advancedFilters: string[] = [];
+    if (params.status) advancedFilters.push(`AREA[Status]${params.status}`);
+    if (params.dateFrom || params.dateTo) {
+      const from = params.dateFrom || '1900-01-01';
+      const to = params.dateTo || '2100-12-31';
+      advancedFilters.push(`AREA[StartDate]RANGE[${from},${to}]`);
+    }
+    if (advancedFilters.length > 0) {
+      // Join multiple advanced filters with comma separator
+      query.set('filter.advanced', advancedFilters.join(','));
+    }
+
     query.set('format', 'json');
 
     const url = `${this.baseUrl}/studies?${query.toString()}`;
