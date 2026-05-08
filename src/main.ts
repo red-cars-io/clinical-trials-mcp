@@ -6,7 +6,7 @@ import { ClinicalTrialsAPI } from './clinicaltrials-api.js';
 
 const api = new ClinicalTrialsAPI();
 
-// handleRequest must be exported for MCP standby mode
+// handleRequest must be exported for MCP standby mode — defined OUTSIDE main() for ESM compatibility
 export const handleRequest = async (req: { toolName: string; arguments: Record<string, unknown> }) => {
     const { toolName, arguments: args } = req;
     const tool = TOOLS.find((t) => t.name === toolName);
@@ -30,9 +30,7 @@ export const handleRequest = async (req: { toolName: string; arguments: Record<s
     }
 };
 
-async function main() {
-    await Actor.init();
-
+function startHttpServer() {
     const server = http.createServer((req, res) => {
         // Readiness probe
         if (req.headers['x-apify-container-server-readiness-probe']) {
@@ -96,7 +94,7 @@ async function main() {
                             geoLocation: toolArgs.geoLocation ?? jsonBody.geoLocation,
                             maxResults: toolArgs.maxResults ?? jsonBody.maxResults,
                             dateFrom: toolArgs.dateFrom ?? jsonBody.dateFrom,
-                            dateTo: toolArgs.dateTo ?? jsonBody.dateTo,
+                            dateTo: toolArgs.dateTo ?? jsonBody.to,
                             compareType: toolArgs.compareType ?? jsonBody.compareType,
                             target: toolArgs.target ?? jsonBody.target,
                             patientProfile: toolArgs.patientProfile ?? jsonBody.patientProfile,
@@ -156,15 +154,29 @@ async function main() {
     });
 
     process.on('SIGTERM', () => { server.close(() => process.exit(0)); });
+}
 
-    // Batch mode (Apify input schema: tool + params)
-    // Only process batch input if a tool is explicitly provided.
-    // In standby MCP mode, tool calls come via HTTP — not through Actor.getInput()
+async function main() {
+    await Actor.init();
+
     const input = await Actor.getInput() as { tool?: string; params?: Record<string, unknown> } | null;
-    if (input?.tool) {
-        console.log(`Running tool: ${input.tool}`);
-        const result = await handleTool(input.tool, input.params || {}, api);
+    const isStandby = process.env.APIFY_META_ORIGIN === 'STANDBY';
+
+    if (isStandby) {
+        // MCP standby mode: start HTTP server, do NOT exit automatically
+        startHttpServer();
+    } else {
+        // Batch mode OR health check (no standby) — run with input or use default tool
+        // Health check sends empty {} — treat that as a request for the default tool
+        const effectiveTool = input?.tool || 'search_trials';
+        const effectiveParams = input?.params || { indication: 'cancer', maxResults: 5 };
+
+        console.log(`Running tool: ${effectiveTool}`);
+        const result = await handleTool(effectiveTool, effectiveParams, api);
+        await Actor.pushData([result]);
         await Actor.setValue('OUTPUT', result);
+        console.log(`Actor.pushData called with array of 1 item`);
+        console.log(`Tool ${effectiveTool} completed, pushing data and exiting`);
         await Actor.exit();
     }
 }
