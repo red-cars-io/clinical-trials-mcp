@@ -1,27 +1,63 @@
 import http from 'http';
-// Apify SDK - toolkit for building Apify Actors (Read more at https://docs.apify.com/sdk/js/)
 import { Actor } from 'apify';
+import { TOOLS } from './tools.js';
+import { handleTool } from './tool-handlers.js';
+import { ClinicalTrialsAPI } from './clinicaltrials-api.js';
 
-// this is ESM project, and as such, it requires you to specify extensions in your relative imports
-// read more about this here: https://nodejs.org/docs/latest-v18.x/api/esm.html#mandatory-file-extensions
-// note that we need to use `.js` even when inside TS files
-// import { router } from './routes.js';
+const api = new ClinicalTrialsAPI();
 
-// The init() call configures the Actor to correctly work with the Apify-provided environment - mainly the storage infrastructure. It is necessary that every Actor performs an init() call.
-await Actor.init();
+interface McpRequest {
+  toolName: string;
+  arguments: Record<string, unknown>;
+}
 
-// Create a simple HTTP server that will respond with a message
-const server = http.createServer((req, res) => {
-    // Handle Apify standby readiness probe
-    // https://docs.apify.com/platform/actors/development/programming-interface/standby#readiness-probe
+async function main() {
+  await Actor.init();
+
+  // handleRequest must be exported for MCP standby mode
+  const handleRequest = async (req: McpRequest) => {
+    const { toolName, arguments: args } = req;
+    const tool = TOOLS.find((t) => t.name === toolName);
+
+    if (!tool) {
+      return {
+        content: [{ type: 'text', text: JSON.stringify({ error: `Unknown tool: ${toolName}` }) }],
+        isError: true,
+      };
+    }
+
+    try {
+      await Actor.charge({ eventName: tool.name, count: 1 });
+      const result = await handleTool(toolName, args as Record<string, unknown>, api);
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result) }],
+      };
+    } catch (err) {
+      return {
+        content: [{ type: 'text', text: JSON.stringify({ error: String(err) }) }],
+        isError: true,
+      };
+    }
+  };
+
+  // Export for MCP gateway
+  module.exports = { handleRequest };
+
+  // HTTP server for readiness probe
+  const server = http.createServer((req, res) => {
     if (req.headers['x-apify-container-server-readiness-probe']) {
-        res.writeHead(200);
-        res.end('ok');
-        return;
+      res.writeHead(200);
+      res.end('ok');
+      return;
     }
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Hello from Actor Standby!\n');
-});
+    res.end('ClinicalTrials Intelligence MCP ready\n');
+  });
 
-// Listen on the standby port
-server.listen(Actor.config.get('standbyPort'));
+  const port = Actor.config.get('standbyPort') || process.env.APIFY_CONTAINER_PORT || 3000;
+  server.listen(port);
+
+  console.log(`ClinicalTrials Intelligence MCP ready on port ${port}`);
+}
+
+main();
