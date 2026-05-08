@@ -1,0 +1,32 @@
+# ClinicalTrials.gov Intelligence MCP
+
+## Tools
+
+### analyze_site_feasibility
+- Input: indication (required), phase, sponsorType, maxSites, geoRegion
+- Output: feasibility brief with ranked sites, enrollment velocity, eligibility scores
+- Price: $0.15
+
+### get_trial_enrollment_trends
+- Input: nctId (required), quarters
+- Output: quarterly enrollment trend with delta percentages
+- Price: $0.08
+
+### compare_enrollment_benchmarks
+- Input: indication, phase, compareType, target
+- Output: benchmark statistics and percentile ranking
+- Price: $0.08
+
+### screen_eligibility_criteria
+- Input: nctId, patientProfile { age, sex, diagnosis, priorTreatments, ecogStatus }
+- Output: eligibility match rate, criteria breakdown, verdict
+- Price: $0.05
+
+### search_trials
+- Input: indication, phase, sponsorType, status, geoLocation, maxResults
+- Output: trial list with NCT IDs, status, enrollment, locations
+- Price: $0.05
+
+## API
+- ClinicalTrials.gov API v2 — no auth required
+- Endpoint: https://clinicaltrials.gov/api/v2/studies

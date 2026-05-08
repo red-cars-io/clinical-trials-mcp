@@ -1,8 +1,8 @@
 {
-    "name": "ts-standby-project",
+    "name": "@apify/clinical-trials-mcp",
     "version": "0.0.1",
     "type": "module",
-    "description": "This is an example of an Apify Actor that uses Standby mode.",
+    "description": "ClinicalTrials.gov Intelligence MCP — AI agent MCP server for clinical trial site feasibility, enrollment velocity, eligibility screening, and benchmark analysis via ClinicalTrials.gov API v2.",
     "engines": {
         "node": ">=20.0.0"
     },

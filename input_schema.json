@@ -1,0 +1,21 @@
+{
+  "title": "Clinical Trials Intelligence MCP",
+  "description": "Analyze clinical trial site feasibility, enrollment patterns, and eligibility criteria via ClinicalTrials.gov API v2.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "tool": {
+        "type": "string",
+        "title": "Tool",
+        "description": "Select a tool to run",
+        "enum": ["analyze_site_feasibility", "get_trial_enrollment_trends", "compare_enrollment_benchmarks", "screen_eligibility_criteria", "search_trials"]
+      },
+      "params": {
+        "type": "string",
+        "title": "Tool Parameters",
+        "description": "JSON object with tool-specific parameters",
+        "default": "{}"
+      }
+    }
+  }
+}
