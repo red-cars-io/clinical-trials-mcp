@@ -1,6 +1,7 @@
 {
   "title": "Clinical Trials Intelligence MCP",
   "description": "Analyze clinical trial site feasibility, enrollment patterns, and eligibility criteria via ClinicalTrials.gov API v2.",
+  "schemaVersion": 1,
   "type": "object",
   "properties": {
     "tool": {
