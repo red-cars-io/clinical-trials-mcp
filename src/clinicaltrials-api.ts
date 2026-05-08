@@ -11,7 +11,7 @@ interface StudySearchParams {
   dateTo?: string;
 }
 
-interface Study {
+export interface Study {
   nctId: string;
   briefTitle: string;
   phase?: string;
