@@ -1,15 +1,15 @@
 {
     "$schema": "https://apify.com/schemas/v1/actor.ide.json",
     "actorSpecification": 1,
-    "name": "ts-standby",
-    "title": "Standby Actor in TypeScript",
-    "description": "Standby Actor in TypeScript.",
+    "name": "clinical-trials-mcp",
+    "title": "Clinical Trials Intelligence MCP",
+    "description": "Site feasibility intelligence for AI agents. Compare clinical trial site enrollment benchmarks, eligibility completeness, and geographic coverage via ClinicalTrials.gov API v2.",
     "version": "0.0",
     "buildTag": "latest",
     "usesStandbyMode": true,
     "meta": {
         "templateId": "ts-standby",
-        "generatedBy": "<FILL-IN-MODEL>"
+        "generatedBy": "AI agent"
     },
     "dockerfile": "../Dockerfile"
 }
